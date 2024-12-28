@@ -1,0 +1,12 @@
+services:
+  fetchardy:
+    build: .
+    ports:
+      - 10002:10002
+    restart: always
+    volumes:
+      - games:/games
+
+volumes:
+  games:
+    external: true
