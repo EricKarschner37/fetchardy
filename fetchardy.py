@@ -1,6 +1,8 @@
 #!/opt/venv/bin/python
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
+from ddtrace import tracer
+from flask import Flask, request
 import csv
 import sys
 import os
@@ -66,11 +68,29 @@ def pull_final_from_table(table, name):
     response = table.select_one('em.correct_response').text
     return {'category': category, 'clue': clue, 'response': response, 'round_type': 'FinalRound', 'name': 'Final Jeopardy', 'default_max_wager': get_default_max_wager_for_round('Final Jeopardy')}
 
-
-if __name__ == '__main__':
+@tracer.wrap()
+def download_game(game_id):
     games_root = os.environ.get('J_GAME_ROOT') or 'games'
-    game_id = sys.argv[1]
     payload = get_game(game_id)
     out_filename = f'{games_root}/{game_id}.json'
     with open(out_filename, 'w') as out_file:
         json.dump(payload, out_file)
+
+tracer.configure(
+    https=False,
+    hostname="datadog-agent",
+)
+
+PORT = 80
+
+app = Flask(__name__)
+
+@app.route("/<game_id>")
+def start(game_id):
+    print('test')
+    download_game(game_id)
+    return game_id
+
+@app.route('/')
+def hello():
+    return 'Hello World!'

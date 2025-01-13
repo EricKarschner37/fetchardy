@@ -8,9 +8,7 @@ RUN PATH="/opt/venv/bin:$PATH"
 RUN pip install -Ur requirements.txt --break-system-packages
 # Copy source code
 COPY fetchardy.py .
-COPY server.py .
 ENV JEOPARDY_GAME_ROOT=games/
 ENV J_GAME_ROOT=games
 ENV PYTHONUNBUFFERED=1
-EXPOSE 10002
-CMD ["python", "server.py"]
+CMD ["sh", "-c", "DD_SERVICE=\"fetchardy\" DD_ENV=\"develop\" DD_LOGS_INJECTION=true DD_PROFILING_ENABLED=true DD_GIT_COMMIT_SHA=\"<GIT_COMMIT_SHA>\"  DD_GIT_REPOSITORY_URL=\"<GIT_REPOSITORY_URL>\" ddtrace-run python -m flask --app fetchardy run -h 0.0.0.0 -p 80"]
