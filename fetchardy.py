@@ -1,6 +1,6 @@
 #!/opt/venv/bin/python
+import requests
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
 from ddtrace import tracer
 from flask import Flask, request
 import csv
@@ -11,9 +11,9 @@ import re
 
 def get_game(game_id):
     url = f"https://www.j-archive.com/showgame.php?game_id={game_id}"
-    html = urlopen(url).read()
-    html = html.replace(b"&lt;", b"<")
-    html = html.replace(b"&gt;", b">")
+    html = requests.get(url).text
+    #html = html.replace(b"&lt;", b"<")
+    #html = html.replace(b"&gt;", b">")
     soup = BeautifulSoup(html)
     table = soup.select_one('div#jeopardy_round').select_one('table.round')
 
@@ -94,3 +94,8 @@ def start(game_id):
 @app.route('/')
 def hello():
     return 'Hello World!'
+
+if __name__ == '__main__':
+    game_id = sys.argv[1]
+    download_game(game_id)
+    print(f'finished downloading: {game_id}')
