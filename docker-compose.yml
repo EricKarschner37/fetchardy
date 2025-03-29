@@ -6,6 +6,7 @@ services:
     restart: always
     volumes:
       - games:/games
+      - media:/media
     networks:
       - otel
 
@@ -16,4 +17,6 @@ networks:
 
 volumes:
   games:
+    external: true
+  media:
     external: true

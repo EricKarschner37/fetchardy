@@ -15,7 +15,7 @@ class GameNotFoundException(Exception):
 def get_game(game_id):
     url = f"https://www.j-archive.com/showgame.php?game_id={game_id}"
     html = requests.get(url).text
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, 'html.parser')
     if f'ERROR: No game {game_id} in database' in html:
         raise GameNotFoundException()
 
@@ -43,6 +43,11 @@ def get_default_max_wager_for_round(round_name):
         return 3000
     return 1000
 
+# j-archive formats media urls as
+# `https://www.j-archive.com/media/<filename>`
+MEDIA_URL_PREFIX = 'https://www.j-archive.com/media/'
+def get_filename_from_media_url(url):
+    return url[len(MEDIA_URL_PREFIX):]
 
 def pull_default_from_table(table, name, round_multiplier=2):
     categories = [{'category': td.text, 'clues': []} for td in table.select("td.category_name")]
@@ -61,7 +66,20 @@ def pull_default_from_table(table, name, round_multiplier=2):
             if responseEl:
                 response = responseEl.text or "This response was missing"
             is_daily_double = td.select_one("td.clue_value_daily_double") is not None
-            categories[i]['clues'].append({'clue': clue, 'response': response, 'cost': cost, 'is_daily_double': is_daily_double})
+            media_url = None
+            mediaEl = clueEl.select_one("a")
+            if mediaEl:
+                href = mediaEl['href']
+                media_data = requests.get(href).content
+                media_filename = get_filename_from_media_url(href)
+                with open(f'media/{media_filename}', 'wb') as f:
+                    f.write(media_data)
+                media_url = f'https://jeopardy.karschner.studio/media/{media_filename}'
+
+            result = {'clue': clue, 'response': response, 'cost': cost, 'is_daily_double': is_daily_double}
+            if media_url:
+                result['media_url'] = media_url
+            categories[i]['clues'].append(result)
     return {'categories': categories, 'name': name, 'round_type': 'DefaultRound', 'default_max_wager': get_default_max_wager_for_round(name)}
 
 def pull_final_from_table(table, name):
