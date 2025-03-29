@@ -75,11 +75,20 @@ def download_game(game_id):
     out_filename = f'{games_root}/{game_id}.json'
     with open(out_filename, 'w') as out_file:
         json.dump(payload, out_file)
+    print(f'finished downloading: {game_id}')
 
-tracer.configure(
-    https=False,
-    hostname="datadog-agent",
-)
+GAME_FILE_EXTENSION = '.json'
+
+def get_latest_game_id():
+    games_root = os.environ.get('J_GAME_ROOT') or 'games'
+    game_ids = [int(filename[:-len(GAME_FILE_EXTENSION)]) for filename in os.listdir(games_root)]
+    if len(game_ids) == 0:
+        return 0
+    return max(game_ids)
+
+def get_missing_games():
+    latest_game_id = get_latest_game_id()
+    download_game(latest_game_id + 1)
 
 PORT = 80
 
@@ -96,6 +105,8 @@ def hello():
     return 'Hello World!'
 
 if __name__ == '__main__':
-    game_id = sys.argv[1]
-    download_game(game_id)
-    print(f'finished downloading: {game_id}')
+    if len(sys.argv) == 1:
+        get_missing_games()
+    else:
+        game_id = sys.argv[1]
+        download_game(game_id)
