@@ -11,4 +11,4 @@ COPY fetchardy.py .
 ENV JEOPARDY_GAME_ROOT=games/
 ENV J_GAME_ROOT=games
 ENV PYTHONUNBUFFERED=1
-CMD ["sh", "-c", "DD_SERVICE=\"fetchardy\" DD_ENV=\"develop\" DD_LOGS_INJECTION=true DD_PROFILING_ENABLED=true DD_GIT_COMMIT_SHA=\"<GIT_COMMIT_SHA>\"  DD_GIT_REPOSITORY_URL=\"<GIT_REPOSITORY_URL>\" ; ddtrace-run python fetchardy ; ddtrace-run python -m flask --app fetchardy run -h 0.0.0.0 -p 80"]
+CMD ["sh", "-c", "DD_SERVICE=\"fetchardy\" DD_ENV=\"develop\" DD_LOGS_INJECTION=true DD_PROFILING_ENABLED=true DD_GIT_COMMIT_SHA=\"<GIT_COMMIT_SHA>\"  DD_GIT_REPOSITORY_URL=\"<GIT_REPOSITORY_URL>\" ; ddtrace-run python fetchardy.py get-latest ; ddtrace-run python -m flask --app fetchardy run -h 0.0.0.0 -p 80"]

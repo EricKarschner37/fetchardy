@@ -9,13 +9,15 @@ import os
 import json
 import re
 
+class GameNotFoundException(Exception):
+    pass
+
 def get_game(game_id):
     url = f"https://www.j-archive.com/showgame.php?game_id={game_id}"
     html = requests.get(url).text
-    #html = html.replace(b"&lt;", b"<")
-    #html = html.replace(b"&gt;", b">")
     soup = BeautifulSoup(html)
-    table = soup.select_one('div#jeopardy_round').select_one('table.round')
+    if f'ERROR: No game {game_id} in database' in html:
+        raise GameNotFoundException()
 
     rounds = []
 
@@ -86,9 +88,14 @@ def get_latest_game_id():
         return 0
     return max(game_ids)
 
-def get_missing_games():
+def get_missing_games(count):
     latest_game_id = get_latest_game_id()
-    download_game(latest_game_id + 1)
+    for i in range(count):
+        try:
+            download_game(latest_game_id + 1 + i)
+        except:
+            print("All up to date")
+            return
 
 PORT = 80
 
@@ -104,9 +111,22 @@ def start(game_id):
 def hello():
     return 'Hello World!'
 
+USAGE_MESSAGE = 'Usage: python fetchardy.py (get-latest | get) [number-of-games | game_id]]'
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        get_missing_games()
+        sys.exit(USAGE_MESSAGE)
+    command = sys.argv[1]
+    if command == 'get-latest':
+        count = 10
+        if len(sys.argv) > 2:
+            count_arg = sys.argv[2]
+            try:
+                count = int(count_arg)
+            except:
+                sys.exit(USAGE_MESSAGE)
+        get_missing_games(count)
     else:
-        game_id = sys.argv[1]
-        download_game(game_id)
+        if len(sys.argv) == 2:
+            sys.exit(USAGE_MESSAGE)
+        download_game(sys.argv[2])
