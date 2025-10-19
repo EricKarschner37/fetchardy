@@ -67,7 +67,8 @@ def pull_default_from_table(table, name, round_multiplier=2):
                 response = responseEl.text or "This response was missing"
             is_daily_double = td.select_one("td.clue_value_daily_double") is not None
             media_url = None
-            mediaEl = clueEl.select_one("a")
+
+            mediaEl = clueEl.select_one("a") if clueEl else None
             if mediaEl:
                 href = mediaEl['href']
                 media_data = requests.get(href).content
